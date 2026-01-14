@@ -99,7 +99,7 @@ def calculate_similarity_scores(input_vector, data):
     return similarity_scores
 
 
-def content_recommendation(song_name,songs_data, transformed_data, k=10):
+def content_recommendation(song_name,artist_name,songs_data, transformed_data, k=10):
     """
     Recommends top k songs similar to the given song based on content-based filtering.
 
@@ -113,10 +113,9 @@ def content_recommendation(song_name,songs_data, transformed_data, k=10):
     Returns:
     DataFrame: A DataFrame containing the top k recommended songs with their names, artists, and Spotify preview URLs.
     """
-    # convert song name to lowercase
-    song_name = song_name.lower()
+    
     # filter out the song from data
-    song_row = songs_data.loc[(songs_data["name"] == song_name)]
+    song_row = songs_data.loc[(songs_data["name"] == song_name)&(songs_data['artist']==artist_name)]
     # get the index of song
     song_index = song_row.index[0]
     # generate the input vector
