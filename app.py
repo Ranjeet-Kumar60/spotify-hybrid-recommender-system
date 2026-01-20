@@ -4,7 +4,7 @@ from scipy.sparse import load_npz
 import pandas as pd
 from collaborative_filtering import collaborative_recommendation
 from numpy import load # load the track ids
-
+from hybrid_recommendations import HybridRecommenderSystem as hrs
 
 track_ids_path = "data/track_ids.npy"
 track_ids = load(track_ids_path,allow_pickle=True)
@@ -29,6 +29,10 @@ songs_data = pd.read_csv(cleaned_data_path)
 # load the transformed data
 transformed_data = load_npz(transformed_data_path)
 
+# load the transformed hybrid data
+transformed_hybrid_data_path = "data/transformed_hybrid_data.npz"
+transformed_hybrid_data = load_npz(transformed_hybrid_data_path)
+
 # Title
 st.title('Welcome to the Spotify Song Recommender!')
 
@@ -47,7 +51,7 @@ artist_name = artist_name.lower()
 
 # k recommndations
 k = st.selectbox('How many recommendations do you want?', [5,10,15,20], index=1)
-filtering_type = st.selectbox('Select the type of filtering:',['Content-Based Filtering',"Collaborative Filtering"])
+filtering_type = st.selectbox('Select the type of filtering:',['Content-Based Filtering',"Collaborative Filtering","Hybrid Recommender System"])
 
 if filtering_type == "Content-Based Filtering":
     if st.button('Get Recommendations'):
@@ -105,3 +109,44 @@ elif filtering_type == "Collaborative Filtering":
                     st.write('---')
         else:
             st.write(f"Sorry, we could not find {song_name} in our databse. Please try another song")
+            
+
+elif filtering_type == "Hybrid Recommender System":
+    if st.button('Get Recommendations'):
+        if ((filtered_data['name'] == song_name) & (filtered_data['artist'] == artist_name)).any():
+            st.write('Recommendations for', f"**{song_name}** by **{artist_name}**")
+            recommender = recommender = hrs(
+    song_name,
+    artist_name,
+    number_of_recommendations=k,
+    Weight_content_based=0.3,
+    weight_collaborative=0.7,
+    songs_data=filtered_data,
+    transformed_matrix=transformed_hybrid_data,
+    interaction_matrix=interaction_matrix,
+    track_ids=track_ids
+)
+
+            recommendations= recommender.give_recommendations()
+            # Display Recommendations
+            for ind , recommendation in recommendations.iterrows():
+                song_name = recommendation['name'].title()
+                artist_name = recommendation['artist'].title()
+                
+                if ind == 0:
+                    st.markdown("## Currently Playing")
+                    st.markdown(f"#### **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['spotify_preview_url'])
+                    st.write('---')
+                elif ind == 1:   
+                    st.markdown("### Next Up 🎵")
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['spotify_preview_url'])
+                    st.write('---')
+                else:
+                    st.markdown(f"#### {ind}. **{song_name}** by **{artist_name}**")
+                    st.audio(recommendation['spotify_preview_url'])
+                    st.write('---')
+        else:
+            st.write(f"Sorry, we could not find {song_name} in our databse. Please try another song")
+            
