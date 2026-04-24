@@ -9,3 +9,4 @@ dvc
 dask[complete]  
 dvc[s3]
 category_encoders
+pytest
